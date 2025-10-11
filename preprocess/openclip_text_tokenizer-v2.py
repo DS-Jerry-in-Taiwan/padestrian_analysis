@@ -1,4 +1,5 @@
 import time
+import numpy as np
 from typing import List, Union, Dict, Any
 from open_clip.tokenizer import SimpleTokenizer
 from transformers import CLIPTokenizerFast
@@ -22,7 +23,7 @@ class OpenCLIPTEXTTokenizer(BaseTextTokenizer):
         texts: Union[str, List[str]], 
         padding: bool = True,
         truncation: bool = True,
-        max_length: int = None,
+        max_length: int = 77,
         return_attention_mask: bool = True,
         return_tensors: str = None,
         **kwargs
@@ -31,35 +32,35 @@ class OpenCLIPTEXTTokenizer(BaseTextTokenizer):
             texts = [texts]
         max_len = max_length if max_length is not None else self.max_length
         
-        input_ids = []
-        attention_masks = []
-        start_time = time.time()
+        time_start = time.time()
+        # 1. 逐句 encode
+        ids_list = []
         for text in texts:
             ids = self.tokenizer.encode(text)
-            print("ids:", ids)
-            print("ids[:max_len]",ids[:max_len])
             if truncation and len(ids) > max_len:
                 ids = ids[:max_len]
-            if padding and  len(ids) < max_len:
-                pad_len = max_len - len(ids)
-                ids = ids + [0] * pad_len  # Assuming 0 is the padding token ID
-            mask = [1 if id != 0 else 0 for id in ids]
-            if padding and len(mask) < max_len:
-                mask += [0] * (max_len - len(mask))
-            input_ids.append(ids)
-            attention_masks.append(mask)
+            ids_list.append(ids)
+
+        # 2. 用 numpy 批次 padding
+        batch_size = len(ids_list)
+        input_ids = np.full((batch_size, max_len), 0, dtype=np.int32)
+        attention_mask = np.zeros((batch_size, max_len), dtype=np.int32)
+
+        for i, ids in enumerate(ids_list):
+            length = min(len(ids), max_len)
+            input_ids[i, :length] = ids[:length]
+            attention_mask[i, :length] = 1
             
-        result = {"input_ids": input_ids}
+        result = {"input_ids": input_ids.tolist()}
         if return_attention_mask:
-            result['attention_mask'] = attention_masks
-        if return_tensors == 'pt':
+            result["attention_mask"] = attention_mask.tolist()
+        if return_tensors == "np":
+            result = {"input_ids": input_ids, "attention_mask": attention_mask}
+        elif return_tensors == "pt":
             import torch
             result = {k: torch.tensor(v) for k, v in result.items()}
-        elif return_tensors == 'np':
-            import numpy as np
-            result = {k: np.array(v) for k, v in result.items()}
         end_time = time.time()
-        print(f"Tokenization took {end_time - start_time:.4f} seconds for {len(texts)} texts.")
+        print(f"Tokenization time: {end_time - time_start:.4f} seconds for {len(texts)} texts.")
         return result
     
     def process_batch(self, texts: List[str], **kwargs) -> List[List[int]]:

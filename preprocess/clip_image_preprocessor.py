@@ -66,8 +66,10 @@ class CLIPImagePreprocessor(BaseImagePreprocessor):
             **kwargs: Additional arguments (not used here).
             
         Returns:
-            List[np.ndarray]: List of preprocessed images as numpy arrays.
+            np.ndarray: Batch of preprocessed images as a numpy array.
         """
-        return [self.__call__(image, **kwargs) for image in images]
+        # Process each image and stack them into a single numpy array
+        preprocessed_images = [self.__call__(image, **kwargs) for image in images]
+        return np.stack(preprocessed_images, axis=0)
     
         
