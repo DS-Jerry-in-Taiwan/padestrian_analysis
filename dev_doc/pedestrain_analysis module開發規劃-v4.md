@@ -67,10 +67,178 @@
  實作 registry（註冊表）與工廠模式，管理所有底層前處理類。
  提供 decorator 或註冊函數，方便擴充新型態/新模型。
 
+   ##### 1. 階段目標
+   - 建立統一的 registry（註冊表）與工廠模式，集中管理所有底層前處理類（如影像、文字、音訊等）。
+   - 提供 decorator 或註冊函數，讓新型態/新模型的前處理類能方便擴充與自動註冊。
+   - 讓 PreprocessManager 或其他模組能根據名稱或型態自動取得對應的前處理類，提升模組化與可維護性。
+
+
+   ##### 2. 階段工項
+
+   **設計 registry 結構**
+      -[x] 建立全域或模組級的 registry dict，儲存所有前處理類的名稱與對應類別/實例。
+
+   **實作註冊 decorator 或函數**
+      -[x] 提供 `@register_preprocessor(name)` decorator 或 `register_preprocessor(name, cls)` 函數，讓新前處理類可自動註冊到 registry。
+
+   **設計工廠方法**
+      -[x] 實作 `get_preprocessor(name, **kwargs)` 工廠函數，根據名稱動態建立或取得對應的前處理類。
+      開發步驟
+         1. 設計 registry 結構
+            - registry 可存放類別或實例。
+               **實作工廠函數 get_preprocessor(name, kwargs)
+         2. 先從 registry 取得物件。
+            - 判斷是類別還是實例：
+               若是類別，則用 **kwargs 初始化並回傳新實例。
+               若是實例，則直接回傳。
+         3. 型別提示與註解
+            - 為工廠函數加上 docstring 與型別提示。
+         4. 單元測試
+            - 測試取得類別、取得實例、傳入初始化參數等情境。
+
+   **整合至 PreprocessManager**
+      -[x] 讓 PreprocessManager 能透過 registry/factory 取得並調用對應的前處理類，支援自動分流與擴充。
+
+      開發步驟
+         1. 在 PreprocessManager 中引入 registry 的工廠方法
+
+         2. import get_preprocessor（以及 registry dict）到 PreprocessManager。
+         修改 preprocess 方法分流邏輯
+
+         3. 當 mode 不是 image/text 或 auto 判斷不到型態時，嘗試從 registry 取得對應的前處理類並調用。
+         支援自動分流與擴充
+
+         4. 讓使用者可直接用 mode 指定新型態（如 'audio'、'video'），PreprocessManager 自動查詢 registry 並調用。
+         型別提示與註解
+
+         為方法加上 docstring、型別提示，說明用途與參數。
+
+   **單元測試與驗證**
+      -[x] 測試註冊、查詢、動態建立、分流等功能，確保 registry/factory 機制穩定可靠。
+
+   **文件與型別提示**
+      -[x] 為 registry、decorator、工廠方法加上 docstring 與型別提示，說明用途與參數。
+---
+
 #### 2.3 底層前處理類
  影像前處理類（如 CLIPImagePreprocessor、ViTImagePreprocessor）
  文字前處理類（如 CLIPTextTokenizer、OpenCLIPTextTokenizer）
  支援批次與單張處理、例外處理、標準化輸出
+
+   ---
+
+   #### 1. 階段目標
+
+   - 建立可擴充的影像與文字前處理類（如 `CLIPImagePreprocessor`、`ViTImagePreprocessor`、`CLIPTextTokenizer`、`OpenCLIPTextTokenizer`）。
+   - 規範所有前處理類的統一接口（如 `__call__` 或 `process` 方法），方便 PreprocessManager 調用。
+   - 支援批次與單張資料處理，例外處理（如格式錯誤、空資料），並保證標準化輸出格式（如 numpy array、token ids）。
+   - 方便後續擴充新模型或新型態前處理類。
+
+   ---
+
+
+   #### 2. 階段工項
+
+   1. **設計抽象基底類別**
+      - 定義 `ImagePreprocessorBase`、`TextTokenizerBase` 等抽象類，規範所有前處理類必須實作的接口（如 `__call__`、`process`）。
+      - 加入型別提示與 docstring。
+      ---
+      #### 1. 明確需求與接口規範
+      - 目標：建立統一的影像與文字前處理抽象基底類別，規範所有前處理類的接口。
+      - 所有底層前處理類都需繼承這些基底類，並強制實作指定方法（如 `__call__`、`process_batch`）。
+
+      ---
+
+      #### 2. 選擇抽象類設計方式
+      - 使用 Python 標準庫 `abc`（Abstract Base Class）與 `@abstractmethod`，強制子類必須實作接口。
+
+      ---
+
+      #### 3. 類別骨架設計
+      - 定義 `ImagePreprocessorBase`、`TextTokenizerBase` 等抽象類。
+      - 規範必須實作的方法（如 `__call__`、`process_batch`）。
+      - 可選擇性提供預設方法（如批次處理可預設呼叫單張處理）。
+
+      ---
+
+      #### 4. 型別提示與 docstring
+      - 為類別與方法加上型別提示，提升可讀性與靜態檢查效果。
+      - 詳細撰寫 docstring，說明用途、參數、回傳型態與例外狀況。
+
+      ---
+
+      #### 5. 單元測試
+      - 測試繼承基底類時，若未實作抽象方法會報錯。
+      - 測試正確繼承與覆寫時能正常運作。
+
+      ---
+
+      #### 6. 文件補充
+      - 在專案文件或 README 中說明抽象基底類的設計理念與使用方式。
+
+      ---
+
+   2. **實作影像前處理類**
+      - 實作 `CLIPImagePreprocessor`、`ViTImagePreprocessor` 等，支援 resize、normalize、格式轉換。
+      - 支援單張與批次處理（如 `__call__(self, image)`、`process_batch(self, images)`）。
+      - 例外處理：格式錯誤、尺寸不符時拋出明確錯誤。
+
+         #### 1. 明確需求與接口設計
+         - 目標：實作 `CLIPImagePreprocessor`、`ViTImagePreprocessor` 等影像前處理類，支援 resize、normalize、格式轉換。
+         - 所有類需繼承 `BaseImagePreprocessor`，統一實作 `__call__`（單張）與 `batch_preprocess`（批次）方法。
+
+         ---
+
+         #### 2. 選擇影像處理庫
+         - 建議使用 Pillow（PIL）、numpy，必要時可用 torchvision。
+
+         ---
+
+         #### 3. 類別骨架設計
+         - 定義建構子（`__init__`）支援目標尺寸、normalize 參數等。
+         - 實作 `__call__` 方法：單張影像 resize、normalize、格式轉換。
+         - 實作 `batch_preprocess` 方法：批次處理，呼叫單張方法。
+
+         ---
+
+         #### 4. 例外處理
+         - 檢查輸入型態（如 PIL.Image、numpy.ndarray），型態錯誤時拋出 ValueError。
+         - 檢查尺寸、格式，錯誤時拋出明確錯誤。
+
+         ---
+
+         #### 5. 標準化輸出
+         - 輸出統一為 numpy array（或 torch tensor，視需求）。
+         - 文件註解說明輸出格式。
+
+         ---
+
+         #### 6. 單元測試
+         - 測試正常情境（單張/批次）、異常情境（型態錯誤、尺寸不符）、normalize 參數等。
+
+         ---
+
+         #### 7. 文件與型別提示
+         - 為類別與方法加上 docstring、型別提示，說明用途、參數、回傳型態與例外狀況。
+
+
+   3. **實作文字前處理類**
+      - 實作 `CLIPTextTokenizer`、`OpenCLIPTextTokenizer` 等，支援分詞、編碼、padding。
+      - 支援單句與批次處理（如 `__call__(self, text)`、`process_batch(self, texts)`）。
+      - 例外處理：空字串、非法字元時拋出明確錯誤。
+
+   4. **標準化輸出格式**
+      - 規範所有前處理類的輸出格式（如影像回傳 numpy array，文字回傳 token ids 或 tensor）。
+      - 文件註解說明各類型的標準化格式。
+
+   5. **單元測試**
+      - 覆蓋單張、批次、例外情境，確保前處理類穩定可靠。
+
+   6. **文件與型別提示**
+      - 為所有類別與方法加上 docstring、型別提示，說明用途、參數、回傳型態與例外狀況。
+
+   ---
+
 
 #### 2.4 單元測試
  覆蓋中介層、registry、底層類的主要功能
