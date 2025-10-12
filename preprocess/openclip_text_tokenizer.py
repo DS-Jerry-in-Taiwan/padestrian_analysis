@@ -1,4 +1,3 @@
-import time
 from typing import List, Union, Dict, Any
 from open_clip.tokenizer import SimpleTokenizer
 from transformers import CLIPTokenizerFast
@@ -33,11 +32,8 @@ class OpenCLIPTEXTTokenizer(BaseTextTokenizer):
         
         input_ids = []
         attention_masks = []
-        start_time = time.time()
         for text in texts:
             ids = self.tokenizer.encode(text)
-            print("ids:", ids)
-            print("ids[:max_len]",ids[:max_len])
             if truncation and len(ids) > max_len:
                 ids = ids[:max_len]
             if padding and  len(ids) < max_len:
@@ -58,8 +54,6 @@ class OpenCLIPTEXTTokenizer(BaseTextTokenizer):
         elif return_tensors == 'np':
             import numpy as np
             result = {k: np.array(v) for k, v in result.items()}
-        end_time = time.time()
-        print(f"Tokenization took {end_time - start_time:.4f} seconds for {len(texts)} texts.")
         return result
     
     def process_batch(self, texts: List[str], **kwargs) -> List[List[int]]:
