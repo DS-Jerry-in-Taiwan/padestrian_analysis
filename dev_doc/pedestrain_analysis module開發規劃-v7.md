@@ -59,11 +59,111 @@
   - [x] 是否支援外部注入、動態擴充新型態前處理？
 
 - **底層前處理類**
-  - [ ] 是否有影像前處理類（如 CLIPImagePreprocessor、ViTImagePreprocessor）？
+  - [x] 是否有影像前處理類（如 CLIPImagePreprocessor、ViTImagePreprocessor）？
 
-  - [ ] 是否有文字前處理類（如 CLIPTextTokenizer 等）？
+    1. **需求分析與接口設計**
+      - 明確影像前處理需求（如 resize、normalize、轉 tensor、色彩空間轉換等）。
+      - 設計統一接口（如 `__call__` 或 `preprocess` 方法），支援單張與批次影像處理。
+
+    2. **建立基底類別**
+      - 在 `preprocess/` 目錄下建立 `BaseImagePreprocessor`，定義標準接口與通用方法。
+
+    3. **實作專用前處理類**
+      - 實作 `CLIPImagePreprocessor`（依照 CLIP 官方前處理流程）。
+      - 實作 `ViTImagePreprocessor`（依照 ViT 官方前處理流程）。
+      - 每個類別繼承自 `BaseImagePreprocessor`，覆寫必要方法。
+
+    4. **支援參數化與擴充**
+      - 支援自訂輸入尺寸、均值/標準差、是否轉 tensor 等參數。
+      - 可根據模型需求擴充其他前處理步驟。
+
+    5. **整合至前處理中介層**
+      - 將新前處理類註冊到 PreprocessManager/Registry，支援自動選擇與調用。
+
+    6. **單元測試**
+      - 撰寫單元測試，驗證單張與多張影像的前處理結果正確性。
+      - 測試異常情境（如輸入格式錯誤、尺寸不符等）。
+
+    7. **文件與型別提示**
+      - 為每個類別與方法補充 docstring 與型別提示。
+      - 在開發文檔中補充使用說明與範例。
+---
+
+  - [x] 是否有文字前處理類（如 CLIPTextTokenizer 等）？
+
+    1. **需求分析與接口設計**
+      - 明確文字前處理需求（如分詞、tokenize、padding、mask 產生等）。
+      - 設計統一接口（如 `__call__` 或 `preprocess` 方法），支援單句與批次文字處理。
+
+    2. **建立基底類別**
+      - 在 `preprocess/` 目錄下建立 `BaseTextTokenizer`，定義標準接口與通用方法。
+
+    3. **實作專用前處理類**
+      - 實作 `CLIPTextTokenizer`（依照 CLIP 官方分詞與前處理流程）。
+      - 可擴充如 `BERTTextTokenizer`、`OpenCLIPTextTokenizer` 等，根據不同模型需求。
+      - 每個類別繼承自 `BaseTextTokenizer`，覆寫必要方法。
+
+    4. **支援參數化與擴充**
+      - 支援自訂最大長度、padding、truncation、是否回傳 attention mask 等參數。
+      - 可根據模型需求擴充其他前處理步驟。
+
+    5. **整合至前處理中介層**
+      - 將新前處理類註冊到 PreprocessManager/Registry，支援自動選擇與調用。
+
+    6. **單元測試**
+      - 撰寫單元測試，驗證單句與多句文字的前處理結果正確性。
+      - 測試異常情境（如輸入格式錯誤、長度不符等）。
+
+    7. **文件與型別提示**
+      - 為每個類別與方法補充 docstring 與型別提示。
+      - 在開發文檔中補充使用說明與範例。
+
+---
   
   - [ ] 是否統一接口（如 `__call__`、`batch_preprocess`），支援例外處理與標準化輸出？
+
+  1. **需求分析**
+    - 明確需要統一的接口功能（如單張與批次處理、例外處理、標準化輸出）。
+    - 確定輸入格式（如影像、文字）與輸出格式（如 tensor、list、dict）。
+
+  2. **設計接口**
+    - 定義 `__call__` 方法，支援單張輸入。
+    - 定義 `batch_preprocess` 方法，支援批次輸入。
+    - 確保接口支援例外處理（如格式錯誤、尺寸不符等）。
+
+  3. **標準化輸出**
+    - 確保所有輸出格式統一（如 numpy array、torch tensor 或 dict）。
+    - 提供選項讓使用者自訂輸出格式。
+
+  4. **例外處理**
+    - 在接口中加入例外處理機制，捕捉常見錯誤（如輸入格式錯誤）。
+    - 提供清晰的錯誤訊息。
+
+    - 主要需調整的檔案
+      影像前處理類
+
+        clip_image_preprocessor.py
+        vit_image_preprocessor.py
+      文字前處理類
+
+        clip_text_preprocessor.py
+        openclip_text_tokenizer.py
+        bert_text_prerpocessor.py（如有）
+
+  5. **整合至基底類別**
+    - 在 `BaseImagePreprocessor` 或 `BaseTextTokenizer` 中定義統一接口。
+    - 確保所有子類別繼承並覆寫必要方法。
+
+  6. **單元測試**
+    - 撰寫單元測試，驗證接口功能正確性。
+    - 測試例外情境（如輸入格式錯誤、尺寸不符等）。
+
+  7. **文件與型別提示**
+    - 為接口方法補充 docstring 與型別提示。
+    - 在開發文檔中補充使用說明與範例。
+
+---
+
 
 - **單元測試**
   - [ ] 是否有覆蓋前處理中介層、registry、底層類的單元測試？

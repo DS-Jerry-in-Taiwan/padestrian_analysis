@@ -11,7 +11,7 @@
 
 - **前處理模組（preprocess/）**  
   - 負責文字與影像的標準化處理，支援多種 tokenizer（如 OpenCLIP、BERT、HuggingFace）。
-- **模型模組（backend/models/）**  
+- **模型模組（models/）**  
   - 行人偵測模型（YOLO, Faster R-CNN 等）
   - 屬性分析模型（Label-based、Prompt-based，支援多標籤分類與 vision-language 模型）
   - 統一訓練、推論、驗證接口
