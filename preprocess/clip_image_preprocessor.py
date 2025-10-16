@@ -43,18 +43,29 @@ class CLIPImagePreprocessor(BaseImagePreprocessor):
         else:
             raise ValueError("Input must be a PIL.Image or numpy array")
         
-        #resize image
-        img = img.convert("RGB")  # Ensure image is in RGB format
-        img = img.resize(self.szie, Image.BICUBIC)
-        
-        # convert to numpy array
+        # Convert to RGB with exception handling
+        try:
+            img = img.convert("RGB")  # Ensure image is in RGB format
+        except Exception as e:
+            raise ValueError(f"Failed to convert image to RGB: {e}")
+
+        # Resize image with exception handling
+        try:
+            img = img.resize(self.size, Image.BICUBIC)
+        except Exception as e:
+            raise ValueError(f"Failed to resize image: {e}")
+
+        # Convert to numpy array
         arr = np.array(img).astype(np.float32) / 255.0  # Scale to [0, 1]
         if arr.shape[-1] != 3:
             raise ValueError(f"Input image must be a PIL.Image or numpy.ndarray")
         
         # normalize
-        arr = (arr - self.mean[None, None, :]) / self.std[None, None, :]
-        arr = arr.transpose(2, 0, 1) # HWC -> CHW
+        try:
+            arr = (arr - self.mean[None, None, :]) / self.std[None, None, :]
+        except Exception as e:
+            raise ValueError(f"Failed to normalize image: {e}")
+        arr = arr.transpose(2, 0, 1)
         
         return arr
     
@@ -69,7 +80,13 @@ class CLIPImagePreprocessor(BaseImagePreprocessor):
             np.ndarray: Batch of preprocessed images as a numpy array.
         """
         # Process each image and stack them into a single numpy array
-        preprocessed_images = [self.__call__(image, **kwargs) for image in images]
+        preprocessed_images = []
+        for idx, image in enumerate(images):
+            try:
+                arr = self.__call__(image, **kwargs)
+                preprocessed_images.append(arr)
+            except Exception as e:
+                raise ValueError(f"Error processing image at index {idx}: {e}")
         return np.stack(preprocessed_images, axis=0)
     
         

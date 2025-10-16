@@ -24,11 +24,18 @@ class CLIPTextTokenizer(BaseTextTokenizer):
         return_attention_mask: bool = True,
         **kwargs
     ) -> Dict[str, Any]:
+        if not isinstance(texts, (str, list)):
+            raise ValueError("Input texts must be a string or a list of strings.")
+        if isinstance(texts, list):
+            if not all(isinstance(t, str) for t in texts):
+                raise ValueError("All elements in the input list must be strings.")
         if isinstance(texts, str):
             texts = [texts]
 
         max_length = max_length if max_length is not None else self.max_length
 
+
+        try:
         result = self.tokenizer(
             texts,
             padding="max_length" if padding else False,
@@ -38,12 +45,15 @@ class CLIPTextTokenizer(BaseTextTokenizer):
             return_attention_mask=return_attention_mask,
             **kwargs
         )
-        
-        # convert BatchEncoding to dict
+        except Exception as e:
+            raise RuntimeError(f"Tokenization failed: {e}")
+
+        # Convert BatchEncoding to dict
         if return_tensors is None:
             result = {k: v for k, v in result.items()}
         else:
             return dict(result)
+        return result
         
     def process_batch(self, texts: List[str], **kwargs) -> Dict[str, Any]:
         """

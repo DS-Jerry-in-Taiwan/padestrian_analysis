@@ -45,18 +45,29 @@ class ViTImagePreprocessor(BaseImagePreprocessor):
         else:
             raise ValueError("Input must be a PIL.Image or numpy array")
         
-        # Resize image
-        img = img.convert("RGB")
-        img = img.resize(self.size, Image.BICUBIC)
+        # Convert to RGB and resize
+        try:
+            img = img.convert("RGB")
+        except Exception as e:
+            raise ValueError(f"Failed to convert image to RGB: {e}")
+        
+        # Resize image with exception handling
+        try:
+            img = img.resize(self.size, Image.BICUBIC)
+        except Exception as e:
+            raise ValueError(f"Failed to resize image: {e}")
         
         
-        # convert numpy array
+        # Convert numpy array
         arr = np.array(img).astype(np.float32) / 255.0 # [0,1]
         if arr.shape[-1] != 3:
-            raise ValueError(f"Input image must be a PIL.Image or numpy.ndarray")
-        
-        # normalize
-        arr = (arr - self.mean[None, None, :]) / self.std[None, None, :]
+            raise ValueError(f"Image after conversion must have 3 channels, got shape {arr.shape}")
+
+        # Normalize
+        try:
+            arr = (arr - self.mean[None, None, :]) / self.std[None, None, :]
+        except Exception as e:
+            raise ValueError(f"Failed to normalize image: {e}")
         arr = arr.transpose(2, 0, 1) # HWC -> CHW
         
         return arr
@@ -73,5 +84,11 @@ class ViTImagePreprocessor(BaseImagePreprocessor):
         """
         
         # Process each image and stack them into a single numpy array
-        preprocessed_images = [self.__call__(image, **kwargs) for image in images]
-        return np.stack(preprocessed_images, axis=0)
+        preprocess_images = []
+        for idx, image in enumerate(images):
+            try:
+                arr = self.__call__(image, **kwargs)
+                preprocess_images.append(arr)
+            except Exception as e:
+                raise ValueError(f"Error processing image at index {idx}: {e}")
+        return np.stack(preprocess_images, axis=0)
