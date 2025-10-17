@@ -36,15 +36,15 @@ class CLIPTextTokenizer(BaseTextTokenizer):
 
 
         try:
-        result = self.tokenizer(
-            texts,
-            padding="max_length" if padding else False,
-            truncation=truncation,
-            max_length=max_length,
-            return_tensors=return_tensors,
-            return_attention_mask=return_attention_mask,
-            **kwargs
-        )
+            result = self.tokenizer(
+                texts,
+                padding="max_length" if padding else False,
+                truncation=truncation,
+                max_length=max_length,
+                return_tensors=return_tensors,
+                return_attention_mask=return_attention_mask,
+                **kwargs
+            )
         except Exception as e:
             raise RuntimeError(f"Tokenization failed: {e}")
 
