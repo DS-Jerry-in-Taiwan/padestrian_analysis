@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 class AttributeAnalyzerBase(ABC):
     """
@@ -19,3 +19,34 @@ class AttributeAnalyzerBase(ABC):
             List[Dict]：每個 box 的屬性分析結果（dict 格式）。
         """
         pass
+    
+    @abstractmethod
+    def save_checkpoint(self,
+                        filepath: str,
+                        optimizer: Optional[Any]= None,
+                        epoch: Optional[int] = None,
+                        extra: Optional[Dict[str, Any]] = None
+                        ) -> None:
+        """
+        model checkpoint
+        Args:
+            filepath (str): 儲存路徑
+            optimizer (可為 PyTorch、TensorFlow 等）: 優化器
+            epoch (int, optional): 訓練輪數
+            extra (Dict[str, Any], optional): 額外資訊
+        """
+        pass
+    
+    @abstractmethod
+    def load_checkpoint(
+        self,
+        filepath: str,
+        optimizer: Optional[Any] = None
+        ) -> Dict[str, Any]:
+        """
+        Load model checkpoint
+        Args:
+            filepath (str): 儲存路徑
+            optimizer (可為 PyTorch、TensorFlow 等）: 優化器
+        """
+        pass    

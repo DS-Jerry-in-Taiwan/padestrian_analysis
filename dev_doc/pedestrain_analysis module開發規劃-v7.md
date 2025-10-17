@@ -166,12 +166,12 @@
 
 
 - **單元測試**
-  - [ ] 是否有覆蓋前處理中介層、registry、底層類的單元測試？
-  - [ ] 是否測試正常與異常情境？
+  - [x] 是否有覆蓋前處理中介層、registry、底層類的單元測試？
+  - [x] 是否測試正常與異常情境？
 
 - **型別提示與文件**
-  - [ ] 是否有型別提示（type hints）？
-  - [ ] 是否有必要的模組/類別/方法文件？
+  - [x] 是否有型別提示（type hints）？
+  - [x] 是否有必要的模組/類別/方法文件？
 
 
 **Checklist：**
@@ -194,6 +194,77 @@
 - [x] Label-based、Prompt-based 屬性分析器可正確推論
 - [x] 模型訓練、驗證、推論方法統一接口
 - [ ] 模型可 checkpoint 儲存/載入
+
+      1. **需求分析**
+        - 明確哪些模型（偵測、屬性分析等）需要支援 checkpoint 儲存與載入。
+        - 決定 checkpoint 格式（如 PyTorch `.pt`/`.pth`、TensorFlow `.ckpt`、自訂 JSON/Dict 等）。
+
+        ### 1. 明確哪些模型需要支援 checkpoint 儲存與載入
+
+        - 偵測模型（如 YOLO, Faster R-CNN）
+        - 屬性分析模型（如 Label-based、Prompt-based 分析器）
+        - 其他自訂模型（如 ReID、MOT 等，若有）
+
+        結論：
+
+          ### 偵測模型
+
+          - YOLO（如 YOLOv8，`Yolov8.py`、`yolov8n.pt`）
+          - Faster R-CNN（`faster-R-CNN.py`）
+
+          ### 屬性分析模型
+
+          - Label-based 屬性分析器（`label_based_attribute_analyzer.py`）
+          - Prompt-based 屬性分析器（`prompt_based_attribute_analyzer.py`）
+        ---
+
+        ### 2. 決定 checkpoint 格式
+
+        - **PyTorch**：建議使用 `.pt` 或 `.pth` 格式（`torch.save` / `torch.load`）
+        - **TensorFlow**：建議使用 `.ckpt` 格式（`tf.train.Checkpoint`）
+        - **自訂格式**：如需儲存額外資訊，可用 JSON/Dict 搭配主流框架儲存
+
+        結論： PyTorch 的 .pt 或 .pth 格式作為模型 checkpoint 儲存與載入的標準。
+
+      2. **設計統一接口**
+        - 在模型基底類別（如 `BaseModel` 或各模型類）定義 `save_checkpoint(filepath)` 與 `load_checkpoint(filepath)` 方法。
+        - 支援儲存/載入模型權重、優化器狀態（如有）、訓練進度等。
+
+          1. **設計基底類別接口**
+            - 在 `BaseModel`（或你的模型基底類）中，定義 `save_checkpoint(filepath, optimizer=None, epoch=None, extra=None)` 與 `load_checkpoint(filepath, optimizer=None)` 方法，並加上型別提示與 docstring。
+
+          2. **實作儲存方法**
+            - 在 `save_checkpoint` 方法中，將模型權重（`self.model.state_dict()`）、優化器狀態（如有）、訓練進度（如 epoch）、額外資訊（如 extra dict）一併存成 dict，使用 `torch.save` 儲存為 `.pt` 或 `.pth` 檔案。
+
+          3. **實作載入方法**
+            - 在 `load_checkpoint` 方法中，使用 `torch.load` 載入 checkpoint，恢復模型權重（`self.model.load_state_dict()`）、優化器狀態（如有）、訓練進度等。
+
+          4. **例外處理**
+            - 加入檔案不存在、格式錯誤等例外處理，並於失敗時給出明確錯誤訊息。
+
+          5. **子類別覆寫與調用**
+            - 確保所有模型子類別（如 YOLO、Faster R-CNN、屬性分析器）都繼承並正確調用這兩個方法。
+
+          6. **單元測試**
+            - 撰寫單元測試，驗證模型儲存後可正確載入並恢復狀態，並測試異常情境。
+
+          ---
+
+      3. **實作儲存方法**
+        - 使用框架（如 PyTorch 的 `torch.save`/`torch.load`）實作 checkpoint 儲存與載入。
+        - 支援自訂 checkpoint 路徑與命名規則。
+
+      4. **例外處理與日誌**
+        - 加入檔案不存在、格式錯誤等例外處理。
+        - 儲存/載入時記錄日誌，方便追蹤。
+
+      5. **單元測試**
+        - 撰寫單元測試，驗證模型儲存後可正確載入並恢復狀態。
+        - 測試異常情境（如檔案損毀、路徑錯誤等）。
+
+      6. **文件與範例**
+        - 在開發文檔與 docstring 中補充使用說明與範例程式碼。
+
 - [ ] 模型模組有單元測試，涵蓋主要功能
 
 ---
