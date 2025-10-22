@@ -193,7 +193,7 @@
 - [x] 屬性分析基底類別可擴充 label-based、prompt-based 分析器
 - [x] Label-based、Prompt-based 屬性分析器可正確推論
 - [x] 模型訓練、驗證、推論方法統一接口
-- [ ] 模型可 checkpoint 儲存/載入
+- [x] 模型可 checkpoint 儲存/載入
 
       1. **需求分析**
         - 明確哪些模型（偵測、屬性分析等）需要支援 checkpoint 儲存與載入。
