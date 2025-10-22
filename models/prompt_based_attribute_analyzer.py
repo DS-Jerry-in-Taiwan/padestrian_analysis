@@ -6,24 +6,26 @@ from preprocess.read_image import Preprocessor
 from models.attribute_analyzer_base import AttributeAnalyzerBase
 
 class PromptBasedAttributeAnalyzer(AttributeAnalyzerBase):
-    def __init__(self, model, attribute_names: List[str], device: torch.device, preprocess: Preprocessor, prompt: List[str]):
+    def __init__(self, model, attribute_names: List[str], device: torch.device,
+                 preprocess: Preprocessor,tokenizer: Callable, prompts: List[str]):
         """
             Args:
-                model: pre-trained model for attribute analysis.
-                attribute_names (list of str): List of attribute names to analyze.
-                device (torch.device): Device to run the model on.
-                preprocess (Preprocessor): Preprocessing function for input images.
-                prompt (str): Prompt template for the model.    
+                model: The prompt-based model for attribute analysis.
+                attribute_names (List[str]): List of attribute names to analyze.
+                device (torch.device): The device to run the model on.
+                preprocess (Preprocessor): The image preprocessor.
+                tokenizer (Callable): The tokenizer for processing prompts.
+                prompt (List[str]): List of prompts corresponding to attributes.
         """
-        self.model = model
-        self.prompt = prompt
-        self.model = self.model.to(device)
+        self.model = model.to(device)
         self.model.eval()
         self.attribute_names = attribute_names
         self.device = device
         self.preprocess = preprocess
-        
-    def analyze(self, image: Any, boxes: List[List[float]]) -> List[Dict[str, float]]:
+        self.tokenizer = tokenizer
+        self.prompts = prompts
+
+    def analyze(self, image: Any, boxes: List[List[float]], prompts: List[str] = None) -> List[Dict[str, float]]:
         """
         Args:
             image (numpy array): The input image
@@ -40,17 +42,14 @@ class PromptBasedAttributeAnalyzer(AttributeAnalyzerBase):
         
         # preprocess batch of images
         input = self.preprocess(crops).to(self.device)
-        
-        # preprocess prompt
+        #Tokenize prompts
         prompts = prompts if prompts is not None else self.prompts
-        
-        #tokenize prompts
-        
-
-
+        tokenized_prompts = self.tokenizer(prompts, return_tensors="pt", padding=True, truncation=True)
+        for k in tokenized_prompts:
+            tokenized_prompts[k] = tokenized_prompts[k].to(self.device)
         # calculate probabilities
         with torch.no_grad():
-            outputs = self.model(inputs, prompts)
+            outputs = self.model(inputs, tokenized_prompts)
             prob = torch.sigmoid(outputs).cpu().numpy()
             results = []
             for p in prob:
@@ -58,3 +57,35 @@ class PromptBasedAttributeAnalyzer(AttributeAnalyzerBase):
                 results.append(result)
                 
         return results
+    
+    def save_checkpoint(self, filepath: str, optimizer: Any = None, epoch: int = None, extra: dict = None) -> None:
+        """
+        save model checkpoint
+        """
+        try:
+            checkpoint = {
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict() if optimizer else None,
+                "epoch": epoch,
+                "extra": extra
+            }
+            if optimizer is not None:
+                checkpoint["optimizer_state_dict"] = optimizer.state_dict()
+            torch.save(checkpoint, filepath)
+        except Exception as e:
+            raise RuntimeError(f"Error saving checkpoint to {filepath}: {e}")
+
+    def load_checkpoint(self, filepath: str, optimizer: Any = None) -> dict:
+        """
+        load model checkpoint
+        """
+        try:
+            checkpoint = torch.load(filepath, map_location=self.device)
+            self.model.load_state_dict(checkpoint["model_state_dict"])
+            if optimizer is not None and checkpoint.get("optimizer_state_dict") is not None:
+                optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+            self.attribute_names = checkpoint.get("attribute_names", self.attribute_names)
+            self.prompts = checkpoint.get("prompts", self.prompts)
+            return checkpoint
+        except Exception as e:
+            raise RuntimeError(f"Error loading checkpoint from {filepath}: {e}")

@@ -47,6 +47,38 @@ class ResNet50AttributeAnalyzer(AttributeAnalyzerBase):
             results.append(result)
         return results
     
+    def save_checkpoint(self, filepath: str, optimizer: Any = None, epoch: int = None, extra: dict=None) -> None:
+        """
+        save model checkpoint
+        """
+        try:
+            checkpoint = {
+                "model_state_dict": self.model.state_dict(),
+                "attribute_names": self.attribute_names,
+                "epoch": epoch,
+                "extra": extra
+            }
+            if optimizer is not None:
+                checkpoint['optimizer_state_dict'] = optimizer.state_dict()
+            torch.save(checkpoint, filepath)
+        except Exception as e:
+            raise RuntimeError(f"Error saving checkpoint to {filepath}: {e}")
+    
+    def load_checkpoint(self, filepath: str, optimizer: Any = None) -> dict:
+        """
+        load model checkpoint
+        """
+        try:
+            checkpoint = torch.load(filepath, map_location=self.device)
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            if optimizer is not None and 'optimizer_state_dict' in checkpoint:
+                optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            # recover extra info: attribute_names, epoch, extra
+            self.attribute_names = checkpoint.get('attribute_names', self.attribute_names)
+            return checkpoint
+        except Exception as e:
+            raise RuntimeError(f"Error loading checkpoint from {filepath}: {e}")
+    
 class VitAttributeAnalyzer(AttributeAnalyzerBase):
     def __init__(self, attribute_names: list[str], device: torch.device, preprocess: Preprocessor):
         self.model = models.vit_b_16(weights=models.ViT_B_16_Weights.DEFAULT)
@@ -87,6 +119,32 @@ class VitAttributeAnalyzer(AttributeAnalyzerBase):
             result = {name: float(value) for name, value in zip(self.attribute_names, pred)}
             results.append(result)
         return results
+    
+    def save_checkpoint(self, filepath: str, optimizer: Any = None, epoch: int = None, extra: dict=None) -> None:
+        """
+        save model checkpoint
+        """
+        checkpoint = {
+            "model_state_dict": self.model.state_dict(),
+            "attribute_names": self.attribute_names,
+            "epoch": epoch,
+            "extra": extra
+        }
+        if optimizer is not None:
+            checkpoint['optimizer_state_dict'] = optimizer.state_dict()
+        torch.save(checkpoint, filepath)
+    
+    def load_checkpoint(self, filepath: str, optimizer: Any = None) -> dict:
+        """
+        load model checkpoint
+        """
+        checkpoint = torch.load(filepath, map_location=self.device)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        if optimizer is not None and 'optimizer_state_dict' in checkpoint:
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        # recover extra info: attribute_names, epoch, extra
+        self.attribute_names = checkpoint.get('attribute_names', self.attribute_names)
+        return checkpoint
 
 
 if __name__ == "__main__":
