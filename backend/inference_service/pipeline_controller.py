@@ -20,16 +20,14 @@ class PipelineController:
 
 def main():
     from backend.inference_service.preprocess_manager import PreprocessManager
+    from backend.postprocess.PostprocessManager import PostprocessManager
     from backend.inference_service.model_analyzer import ModelAnalyzer
     # Object initialization
     preprocessor = PreprocessManager()
     model_analyzer = ModelAnalyzer()
+    postprocessor = PostprocessManager()
 
-    def dummy_postprocessor(model_output):
-        # Dummy postprocessor that just returns the model output
-        return model_output
-
-    pipeline_collector = PipelineController(preprocessor, model_analyzer, dummy_postprocessor)
+    pipeline_collector = PipelineController(preprocessor, model_analyzer, postprocessor)
 
     pipeline_collector.run("input data example")
 
