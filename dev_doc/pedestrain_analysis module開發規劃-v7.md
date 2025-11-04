@@ -275,7 +275,7 @@
 主流程可協調前處理、模型推論、後處理等模組，並支援快取、日誌、資料存取等輔助功能。
 
 **Checklist：**
-- [ ] 主流程控制層可依序調用前處理、推論、後處理
+- [x] 主流程控制層可依序調用前處理、推論、後處理
 1. **需求分析與流程設計**
    - 明確主流程的輸入（如影像、文字、batch 資料等）與預期輸出（如屬性 dict、JSON、DataFrame）。
    - 規劃主流程需依序調用：前處理 → 模型推論 → 後處理。
@@ -303,6 +303,8 @@
    - 為主流程控制層補充 docstring、型別提示與開發文檔範例。
 ---
 
+
+# 進階功能
 - [ ] 可整合多模型與多任務推論
 - [ ] 支援快取、日誌、資料存取等輔助功能
 - [ ] 主流程有單元測試，驗證模組協調正確性
@@ -313,6 +315,10 @@
 
 **目標：**  
 將模型原始輸出轉為結構化、語意化資訊，並支援多種回傳格式與後處理功能。
+
+
+**Checklist：**
+- [x] 後處理模組可將模型輸出轉為 dict、JSON、DataFrame 等格式
 
 1. **需求分析與接口設計**
    - 明確後處理的輸入（模型原始輸出）與預期輸出（如 dict、JSON、DataFrame 等）。
@@ -339,11 +345,9 @@
    - 為類別與方法補充 docstring、型別提示。
    - 在開發文檔中補充使用說明與範例。
 
-**Checklist：**
-- [x] 後處理模組可將模型輸出轉為 dict、JSON、DataFrame 等格式
 - [x] 支援屬性分群、排序、信心分數過濾等功能
-- [ ] 提供 API 友善的回傳格式
-- [ ] 後處理模組有單元測試，驗證功能正確性
+- [x] 提供 API 友善的回傳格式
+- [x] 後處理模組有單元測試，驗證功能正確性
 
 ---
 
@@ -351,7 +355,42 @@
 
 **目標：**  
 提供標準化、易於串接的 RESTful API，支援主要業務流程與健康檢查。
+### 6. API 介面設計（backend/api/）開發步驟
 
+1. **選擇框架**
+   - 建議使用 FastAPI（推薦，支援自動化文件）或 Flask。
+
+2. **建立 API 目錄與主檔案**
+   - 在 `backend/api/` 下建立 `main.py` 或 `app.py` 作為 API 入口。
+
+3. **初始化 API 應用**
+   - 初始化 FastAPI/Flask 應用，設定 CORS 支援。
+
+4. **定義 API 請求/回應資料模型**
+   - 使用 Pydantic（FastAPI）或 Marshmallow（Flask）定義請求與回應格式，確保資料驗證。
+
+5. **設計與實作端點**
+   - `/detect`：單純偵測（回傳 bbox 等）。
+   - `/analyze`：屬性分析（回傳屬性）。
+   - `/pipeline`：完整流程（偵測+屬性+後處理）。
+   - `/health`：健康檢查。
+
+6. **串接主流程控制層**
+   - 在端點中調用 `PipelineController` 或主流程物件，串接前處理、推論、後處理。
+
+7. **自動化 API 文件**
+   - FastAPI 會自動產生 Swagger/OpenAPI 文件（/docs, /openapi.json）。
+   - 若用 Flask，可用 flask-restx 或 flask-smorest 等套件。
+
+8. **API 單元測試與整合測試**
+   - 使用 pytest + httpx（FastAPI）或 pytest + Flask test client 撰寫 API 測試。
+
+9. **補充文件與型別提示**
+   - 為 API 方法補充 docstring、型別提示，並在 README 或 docs 中補充 API 說明。
+
+---
+
+如需 scaffold 範例或具體程式碼，請告知你要用 FastAPI 還是 Flask！
 **Checklist：**
 - [ ] 使用 FastAPI（或 Flask）設計 RESTful API
 - [ ] 定義 `/detect`、`/analyze`、`/pipeline`、`/health` 等端點
