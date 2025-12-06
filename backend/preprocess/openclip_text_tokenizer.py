@@ -26,14 +26,23 @@ class OpenCLIPTEXTTokenizer(BaseTextTokenizer):
         return_tensors: str = None,
         **kwargs
         ) -> Dict[str, Any]:
+        if not isinstance(texts, (str, list)):
+            raise ValueError("Input texts must be a string or a list of strings.")
+        if isinstance(texts, list):
+            if not all(isinstance(t, str) for t in texts):
+                raise ValueError("All elements in the input list must be strings.")
         if isinstance(texts, str):
             texts = [texts]
+            
         max_len = max_length if max_length is not None else self.max_length
         
         input_ids = []
         attention_masks = []
-        for text in texts:
-            ids = self.tokenizer.encode(text)
+        for idx, text in enumerate(texts):
+            try:
+                ids = self.tokenizer.encode(text)
+            except Exception as e:
+                raise RuntimeError(f"Tokenization failed for text at index {idx}: {e}")
             if truncation and len(ids) > max_len:
                 ids = ids[:max_len]
             if padding and  len(ids) < max_len:
@@ -46,14 +55,18 @@ class OpenCLIPTEXTTokenizer(BaseTextTokenizer):
             attention_masks.append(mask)
             
         result = {"input_ids": input_ids}
+        
         if return_attention_mask:
             result['attention_mask'] = attention_masks
-        if return_tensors == 'pt':
-            import torch
-            result = {k: torch.tensor(v) for k, v in result.items()}
-        elif return_tensors == 'np':
-            import numpy as np
-            result = {k: np.array(v) for k, v in result.items()}
+        try:
+            if return_tensors == 'pt':
+                import torch
+                result = {k: torch.tensor(v) for k, v in result.items()}
+            elif return_tensors == 'np':
+                import numpy as np
+                result = {k: np.array(v) for k, v in result.items()}
+        except Exception as e:
+            raise RuntimeError(f"Failed to convert result to tensor: {e}")
         return result
     
     def process_batch(self, texts: List[str], **kwargs) -> List[List[int]]:

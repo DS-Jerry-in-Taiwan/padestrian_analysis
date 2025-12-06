@@ -59,19 +59,119 @@
   - [x] 是否支援外部注入、動態擴充新型態前處理？
 
 - **底層前處理類**
-  - [ ] 是否有影像前處理類（如 CLIPImagePreprocessor、ViTImagePreprocessor）？
+  - [x] 是否有影像前處理類（如 CLIPImagePreprocessor、ViTImagePreprocessor）？
 
-  - [ ] 是否有文字前處理類（如 CLIPTextTokenizer 等）？
+    1. **需求分析與接口設計**
+      - 明確影像前處理需求（如 resize、normalize、轉 tensor、色彩空間轉換等）。
+      - 設計統一接口（如 `__call__` 或 `preprocess` 方法），支援單張與批次影像處理。
+
+    2. **建立基底類別**
+      - 在 `preprocess/` 目錄下建立 `BaseImagePreprocessor`，定義標準接口與通用方法。
+
+    3. **實作專用前處理類**
+      - 實作 `CLIPImagePreprocessor`（依照 CLIP 官方前處理流程）。
+      - 實作 `ViTImagePreprocessor`（依照 ViT 官方前處理流程）。
+      - 每個類別繼承自 `BaseImagePreprocessor`，覆寫必要方法。
+
+    4. **支援參數化與擴充**
+      - 支援自訂輸入尺寸、均值/標準差、是否轉 tensor 等參數。
+      - 可根據模型需求擴充其他前處理步驟。
+
+    5. **整合至前處理中介層**
+      - 將新前處理類註冊到 PreprocessManager/Registry，支援自動選擇與調用。
+
+    6. **單元測試**
+      - 撰寫單元測試，驗證單張與多張影像的前處理結果正確性。
+      - 測試異常情境（如輸入格式錯誤、尺寸不符等）。
+
+    7. **文件與型別提示**
+      - 為每個類別與方法補充 docstring 與型別提示。
+      - 在開發文檔中補充使用說明與範例。
+---
+
+  - [x] 是否有文字前處理類（如 CLIPTextTokenizer 等）？
+
+    1. **需求分析與接口設計**
+      - 明確文字前處理需求（如分詞、tokenize、padding、mask 產生等）。
+      - 設計統一接口（如 `__call__` 或 `preprocess` 方法），支援單句與批次文字處理。
+
+    2. **建立基底類別**
+      - 在 `preprocess/` 目錄下建立 `BaseTextTokenizer`，定義標準接口與通用方法。
+
+    3. **實作專用前處理類**
+      - 實作 `CLIPTextTokenizer`（依照 CLIP 官方分詞與前處理流程）。
+      - 可擴充如 `BERTTextTokenizer`、`OpenCLIPTextTokenizer` 等，根據不同模型需求。
+      - 每個類別繼承自 `BaseTextTokenizer`，覆寫必要方法。
+
+    4. **支援參數化與擴充**
+      - 支援自訂最大長度、padding、truncation、是否回傳 attention mask 等參數。
+      - 可根據模型需求擴充其他前處理步驟。
+
+    5. **整合至前處理中介層**
+      - 將新前處理類註冊到 PreprocessManager/Registry，支援自動選擇與調用。
+
+    6. **單元測試**
+      - 撰寫單元測試，驗證單句與多句文字的前處理結果正確性。
+      - 測試異常情境（如輸入格式錯誤、長度不符等）。
+
+    7. **文件與型別提示**
+      - 為每個類別與方法補充 docstring 與型別提示。
+      - 在開發文檔中補充使用說明與範例。
+
+---
   
   - [ ] 是否統一接口（如 `__call__`、`batch_preprocess`），支援例外處理與標準化輸出？
 
+  1. **需求分析**
+    - 明確需要統一的接口功能（如單張與批次處理、例外處理、標準化輸出）。
+    - 確定輸入格式（如影像、文字）與輸出格式（如 tensor、list、dict）。
+
+  2. **設計接口**
+    - 定義 `__call__` 方法，支援單張輸入。
+    - 定義 `batch_preprocess` 方法，支援批次輸入。
+    - 確保接口支援例外處理（如格式錯誤、尺寸不符等）。
+
+  3. **標準化輸出**
+    - 確保所有輸出格式統一（如 numpy array、torch tensor 或 dict）。
+    - 提供選項讓使用者自訂輸出格式。
+
+  4. **例外處理**
+    - 在接口中加入例外處理機制，捕捉常見錯誤（如輸入格式錯誤）。
+    - 提供清晰的錯誤訊息。
+
+    - 主要需調整的檔案
+      影像前處理類
+
+        clip_image_preprocessor.py
+        vit_image_preprocessor.py
+      文字前處理類
+
+        clip_text_preprocessor.py
+        openclip_text_tokenizer.py
+        bert_text_prerpocessor.py（如有）
+
+  5. **整合至基底類別**
+    - 在 `BaseImagePreprocessor` 或 `BaseTextTokenizer` 中定義統一接口。
+    - 確保所有子類別繼承並覆寫必要方法。
+
+  6. **單元測試**
+    - 撰寫單元測試，驗證接口功能正確性。
+    - 測試例外情境（如輸入格式錯誤、尺寸不符等）。
+
+  7. **文件與型別提示**
+    - 為接口方法補充 docstring 與型別提示。
+    - 在開發文檔中補充使用說明與範例。
+
+---
+
+
 - **單元測試**
-  - [ ] 是否有覆蓋前處理中介層、registry、底層類的單元測試？
-  - [ ] 是否測試正常與異常情境？
+  - [x] 是否有覆蓋前處理中介層、registry、底層類的單元測試？
+  - [x] 是否測試正常與異常情境？
 
 - **型別提示與文件**
-  - [ ] 是否有型別提示（type hints）？
-  - [ ] 是否有必要的模組/類別/方法文件？
+  - [x] 是否有型別提示（type hints）？
+  - [x] 是否有必要的模組/類別/方法文件？
 
 
 **Checklist：**
@@ -93,8 +193,79 @@
 - [x] 屬性分析基底類別可擴充 label-based、prompt-based 分析器
 - [x] Label-based、Prompt-based 屬性分析器可正確推論
 - [x] 模型訓練、驗證、推論方法統一接口
-- [ ] 模型可 checkpoint 儲存/載入
-- [ ] 模型模組有單元測試，涵蓋主要功能
+- [x] 模型可 checkpoint 儲存/載入
+
+      1. **需求分析**
+        - 明確哪些模型（偵測、屬性分析等）需要支援 checkpoint 儲存與載入。
+        - 決定 checkpoint 格式（如 PyTorch `.pt`/`.pth`、TensorFlow `.ckpt`、自訂 JSON/Dict 等）。
+
+        ### 1. 明確哪些模型需要支援 checkpoint 儲存與載入
+
+        - 偵測模型（如 YOLO, Faster R-CNN）
+        - 屬性分析模型（如 Label-based、Prompt-based 分析器）
+        - 其他自訂模型（如 ReID、MOT 等，若有）
+
+        結論：
+
+          ### 偵測模型
+
+          - YOLO（如 YOLOv8，`Yolov8.py`、`yolov8n.pt`）
+          - Faster R-CNN（`faster-R-CNN.py`）
+
+          ### 屬性分析模型
+
+          - Label-based 屬性分析器（`label_based_attribute_analyzer.py`）
+          - Prompt-based 屬性分析器（`prompt_based_attribute_analyzer.py`）
+---
+
+        ### 2. 決定 checkpoint 格式
+
+        - **PyTorch**：建議使用 `.pt` 或 `.pth` 格式（`torch.save` / `torch.load`）
+        - **TensorFlow**：建議使用 `.ckpt` 格式（`tf.train.Checkpoint`）
+        - **自訂格式**：如需儲存額外資訊，可用 JSON/Dict 搭配主流框架儲存
+
+        結論： PyTorch 的 .pt 或 .pth 格式作為模型 checkpoint 儲存與載入的標準。
+
+      2. **設計統一接口**
+        - 在模型基底類別（如 `BaseModel` 或各模型類）定義 `save_checkpoint(filepath)` 與 `load_checkpoint(filepath)` 方法。
+        - 支援儲存/載入模型權重、優化器狀態（如有）、訓練進度等。
+
+          1. **設計基底類別接口**
+            - 在 `BaseModel`（或你的模型基底類）中，定義 `save_checkpoint(filepath, optimizer=None, epoch=None, extra=None)` 與 `load_checkpoint(filepath, optimizer=None)` 方法，並加上型別提示與 docstring。
+
+          2. **實作儲存方法**
+            - 在 `save_checkpoint` 方法中，將模型權重（`self.model.state_dict()`）、優化器狀態（如有）、訓練進度（如 epoch）、額外資訊（如 extra dict）一併存成 dict，使用 `torch.save` 儲存為 `.pt` 或 `.pth` 檔案。
+
+          3. **實作載入方法**
+            - 在 `load_checkpoint` 方法中，使用 `torch.load` 載入 checkpoint，恢復模型權重（`self.model.load_state_dict()`）、優化器狀態（如有）、訓練進度等。
+
+          4. **例外處理**
+            - 加入檔案不存在、格式錯誤等例外處理，並於失敗時給出明確錯誤訊息。
+
+          5. **子類別覆寫與調用**
+            - 確保所有模型子類別（如 YOLO、Faster R-CNN、屬性分析器）都繼承並正確調用這兩個方法。
+
+          6. **單元測試**
+            - 撰寫單元測試，驗證模型儲存後可正確載入並恢復狀態，並測試異常情境。
+
+---
+
+      3. **實作儲存方法**
+        - 使用框架（如 PyTorch 的 `torch.save`/`torch.load`）實作 checkpoint 儲存與載入。
+        - 支援自訂 checkpoint 路徑與命名規則。
+
+      4. **例外處理與日誌**
+        - 加入檔案不存在、格式錯誤等例外處理。
+        - 儲存/載入時記錄日誌，方便追蹤。
+
+      5. **單元測試**
+        - 撰寫單元測試，驗證模型儲存後可正確載入並恢復狀態。
+        - 測試異常情境（如檔案損毀、路徑錯誤等）。
+
+      6. **文件與範例**
+        - 在開發文檔與 docstring 中補充使用說明與範例程式碼。
+
+- [x] 模型模組有單元測試，涵蓋主要功能
 
 ---
 
@@ -104,7 +275,36 @@
 主流程可協調前處理、模型推論、後處理等模組，並支援快取、日誌、資料存取等輔助功能。
 
 **Checklist：**
-- [ ] 主流程控制層可依序調用前處理、推論、後處理
+- [x] 主流程控制層可依序調用前處理、推論、後處理
+1. **需求分析與流程設計**
+   - 明確主流程的輸入（如影像、文字、batch 資料等）與預期輸出（如屬性 dict、JSON、DataFrame）。
+   - 規劃主流程需依序調用：前處理 → 模型推論 → 後處理。
+
+2. **設計主流程控制類別/函式**
+   - 在 `inference_service/` 目錄下建立主流程控制類（如 `PipelineController` 或 `InferencePipeline`）。
+   - 定義統一接口（如 `run()` 或 `__call__()`），負責協調前處理、推論、後處理。
+
+3. **整合前處理模組**
+   - 在主流程中調用前處理模組（如 `PreprocessManager`），將原始輸入轉為模型可用格式。
+
+4. **整合模型推論模組**
+   - 調用模型推論接口（如 `analyze()`、`predict()`），取得原始模型輸出。
+
+5. **整合後處理模組**
+   - 調用後處理模組（如 `PostprocessManager`），將模型輸出轉為結構化、語意化資訊。
+
+6. **例外處理與日誌**
+   - 在主流程中加入例外處理，確保流程穩定，並記錄必要日誌。
+
+7. **單元測試**
+   - 撰寫主流程的單元測試，驗證各模組協調正確性，並測試異常情境。
+
+8. **文件與範例**
+   - 為主流程控制層補充 docstring、型別提示與開發文檔範例。
+---
+
+
+# 進階功能
 - [ ] 可整合多模型與多任務推論
 - [ ] 支援快取、日誌、資料存取等輔助功能
 - [ ] 主流程有單元測試，驗證模組協調正確性
@@ -116,11 +316,38 @@
 **目標：**  
 將模型原始輸出轉為結構化、語意化資訊，並支援多種回傳格式與後處理功能。
 
+
 **Checklist：**
-- [ ] 後處理模組可將模型輸出轉為 dict、JSON、DataFrame 等格式
-- [ ] 支援屬性分群、排序、信心分數過濾等功能
-- [ ] 提供 API 友善的回傳格式
-- [ ] 後處理模組有單元測試，驗證功能正確性
+- [x] 後處理模組可將模型輸出轉為 dict、JSON、DataFrame 等格式
+
+1. **需求分析與接口設計**
+   - 明確後處理的輸入（模型原始輸出）與預期輸出（如 dict、JSON、DataFrame 等）。
+   - 設計統一接口（如 `__call__()` 或 `postprocess()`），支援多種回傳格式。
+
+2. **建立後處理模組檔案**
+   - 在 `backend/postprocess/` 目錄下建立 `PostprocessManager.py`。
+   - 定義基底類別與標準方法。
+
+3. **實作主要後處理功能**
+   - 將模型輸出轉為結構化資訊（如屬性 dict、JSON）。
+   - 支援屬性分群、排序、信心分數過濾等功能（可先實作最基本的格式轉換，後續再擴充）。
+
+4. **支援多種回傳格式**
+   - 提供參數選擇回傳格式（如 dict、JSON、DataFrame）。
+
+5. **例外處理與日誌**
+   - 加入輸入格式錯誤、資料缺失等例外處理，並記錄必要日誌。
+
+6. **單元測試**
+   - 撰寫單元測試，驗證後處理功能正確性與異常情境。
+
+7. **文件與型別提示**
+   - 為類別與方法補充 docstring、型別提示。
+   - 在開發文檔中補充使用說明與範例。
+
+- [x] 支援屬性分群、排序、信心分數過濾等功能
+- [x] 提供 API 友善的回傳格式
+- [x] 後處理模組有單元測試，驗證功能正確性
 
 ---
 
@@ -128,7 +355,42 @@
 
 **目標：**  
 提供標準化、易於串接的 RESTful API，支援主要業務流程與健康檢查。
+### 6. API 介面設計（backend/api/）開發步驟
 
+1. **選擇框架**
+   - 建議使用 FastAPI（推薦，支援自動化文件）或 Flask。
+
+2. **建立 API 目錄與主檔案**
+   - 在 `backend/api/` 下建立 `main.py` 或 `app.py` 作為 API 入口。
+
+3. **初始化 API 應用**
+   - 初始化 FastAPI/Flask 應用，設定 CORS 支援。
+
+4. **定義 API 請求/回應資料模型**
+   - 使用 Pydantic（FastAPI）或 Marshmallow（Flask）定義請求與回應格式，確保資料驗證。
+
+5. **設計與實作端點**
+   - `/detect`：單純偵測（回傳 bbox 等）。
+   - `/analyze`：屬性分析（回傳屬性）。
+   - `/pipeline`：完整流程（偵測+屬性+後處理）。
+   - `/health`：健康檢查。
+
+6. **串接主流程控制層**
+   - 在端點中調用 `PipelineController` 或主流程物件，串接前處理、推論、後處理。
+
+7. **自動化 API 文件**
+   - FastAPI 會自動產生 Swagger/OpenAPI 文件（/docs, /openapi.json）。
+   - 若用 Flask，可用 flask-restx 或 flask-smorest 等套件。
+
+8. **API 單元測試與整合測試**
+   - 使用 pytest + httpx（FastAPI）或 pytest + Flask test client 撰寫 API 測試。
+
+9. **補充文件與型別提示**
+   - 為 API 方法補充 docstring、型別提示，並在 README 或 docs 中補充 API 說明。
+
+---
+
+如需 scaffold 範例或具體程式碼，請告知你要用 FastAPI 還是 Flask！
 **Checklist：**
 - [ ] 使用 FastAPI（或 Flask）設計 RESTful API
 - [ ] 定義 `/detect`、`/analyze`、`/pipeline`、`/health` 等端點
