@@ -2,6 +2,7 @@
 data/
 *.sh
 tests/__pycache__/
+tests/unit_tests/__pycache__/
 __pycache__/
 *.pyc
 *.pyo
@@ -17,4 +18,4 @@ __pycache__/
 .venv
 env/
 venv/
-dev_doc/market_info
+dev_doc/market_info/

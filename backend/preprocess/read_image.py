@@ -9,7 +9,7 @@ from typing import Union, List, Optional, Dict, Any
 
 
 
-class Preprocessor:
+class DetectionImagePreprocessor:
     def __init__(self, size=(224,224), mean=None, std=None, model_type='default', use_center_crop=None):
         """
         Args:

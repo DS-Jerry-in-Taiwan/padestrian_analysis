@@ -75,6 +75,136 @@ pedestrian_attribute_recognition_30%/
 - **測試**：`tests/`
 - **資料集**：`data/`
 
+### 前處理模組接口與使用範例
+
+#### 主要接口
+```python
+from backend.preprocess.PreprocessManager import PreprocessManager
+
+manager = PreprocessManager()
+result = manager.preprocess(data, mode='auto')  # 自動分流 image/text
+```
+
+#### 使用範例
+```python
+# 處理影像
+import numpy as np
+np_image = np.zeros((224, 224, 3))
+image_result = manager.preprocess(np_image, mode='auto')
+
+# 處理文字
+text = "行人穿著紅色外套"
+text_result = manager.preprocess(text, mode='auto')
+```
+
+### 多模型切換與推論接口範例
+
+#### 主要接口
+```python
+from backend.models.pedestrian_detector import PedestrianDetector
+
+# 切換不同模型
+detector = PedestrianDetector(model_type='fasterrcnn')
+result1 = detector.detect(image_data)
+
+detector = PedestrianDetector(model_type='yolov8')
+result2 = detector.detect(image_data)
+
+detector = PedestrianDetector(model_type='retinanet')
+result3 = detector.detect(image_data)
+```
+
+#### 使用範例
+```python
+import numpy as np
+image_data = np.zeros((224, 224, 3), dtype=np.uint8)
+
+# Faster R-CNN
+detector = PedestrianDetector(model_type='fasterrcnn')
+results = detector.detect(image_data)
+print("Faster R-CNN:", results)
+
+# YOLOv8
+detector = PedestrianDetector(model_type='yolov8')
+results = detector.detect(image_data)
+print("YOLOv8:", results)
+
+# RetinaNet
+detector = PedestrianDetector(model_type='retinanet')
+results = detector.detect(image_data)
+print("RetinaNet:", results)
+```
+
+- 可根據需求切換不同偵測模型，統一使用 `detect()` 方法取得結果。
+- 輸出格式一致，方便後續串接後處理模組。
+
+
+
+### 後處理模組接口與使用範例
+
+#### 主要接口
+```python
+from backend.postprocess.PostprocessManager import PostprocessManager
+
+post_manager = PostprocessManager(score_threshold=0.5, output_format='dict')
+result = post_manager.postprocess(model_outputs)
+```
+
+#### 使用範例
+```python
+# 假設 model_outputs 為 list of (box, score)
+model_outputs = [
+    ([10, 20, 100, 200], 0.8),
+    ([30, 40, 120, 220], 0.4),
+    ([50, 60, 150, 250], 0.9)
+]
+
+post_manager = PostprocessManager(score_threshold=0.5, output_format='dict')
+filtered_results = post_manager.postprocess(model_outputs)
+print(filtered_results)
+# 輸出: [{'box': [10, 20, 100, 200], 'score': 0.8}, {'box': [50, 60, 150, 250], 'score': 0.9}]
+```
+
+- 可根據需求選擇輸出格式（dict、JSON、DataFrame 等）。
+- 支援分群、排序、信心分數過濾、top-k 選擇等功能。
+
+### Pipeline 主流程接口與使用範例
+
+#### 主要接口
+```python
+from backend.inference_service.pipeline_controller import PipelineController
+from backend.preprocess.PreprocessManager import PreprocessManager
+from backend.models.pedestrian_detector import PedestrianDetector
+from backend.postprocess.PostprocessManager import PostprocessManager
+
+# 建立各模組
+preprocessor = PreprocessManager()
+detector = PedestrianDetector(model_type='fasterrcnn')
+postprocessor = PostprocessManager(score_threshold=0.5)
+
+# 建立 pipeline
+pipeline = PipelineController(preprocessor, detector, postprocessor)
+result = pipeline.run(input_data)
+```
+
+#### 使用範例
+```python
+import numpy as np
+input_data = np.zeros((224, 224, 3), dtype=np.uint8)
+
+pipeline = PipelineController(
+    PreprocessManager(),
+    PedestrianDetector(model_type='fasterrcnn'),
+    PostprocessManager(score_threshold=0.5)
+)
+final_result = pipeline.run(input_data)
+print(final_result)
+```
+
+- PipelineController 可協調前處理、模型推論、後處理，統一取得最終結果。
+- 支援多模型切換、分流、格式化輸出。
+
+
 ---
 ## 聯絡與貢獻
 

@@ -1,0 +1,9 @@
+flowchart TD
+    A[輸入資料 image/text] --> B{PreprocessManager}
+    B -->|mode='auto'| C1[判斷型態]
+    C1 -->|image| D1[get_preprocessor'image']
+    C1 -->|text| D2[get_preprocessor'text']
+    D1 --> E1[BaseImagePreprocessor/子類]
+    D2 --> E2[BaseTextTokenizer/子類]
+    E1 --> F[前處理結果]
+    E2 --> F[前處理結果]
