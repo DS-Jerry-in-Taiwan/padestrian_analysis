@@ -1,5 +1,8 @@
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../backend')))
 import unittest
-from backend.postprocess.PostprocessManager import PostprocessManager
+from postprocess.PostprocessManager import PostprocessManager
 
 class TestPostprocessManager(unittest.TestCase):
     def setUp(self):

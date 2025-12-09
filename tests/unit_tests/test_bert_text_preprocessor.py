@@ -1,6 +1,9 @@
+import os 
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../backend')))
 import unittest
 import numpy as np
-from preprocess.transformer_text_prerpocessor import TransformerTextPreprocessor
+from preprocess.bert_text_prerpocessor import TransformerTextPreprocessor
 
 class TestTransformerTextPreprocessor(unittest.TestCase):
     def setUp(self):
