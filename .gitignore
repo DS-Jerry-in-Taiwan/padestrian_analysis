@@ -17,4 +17,4 @@ __pycache__/
 .venv
 env/
 venv/
-dev_doc/market_info
+dev_doc/market_info/
