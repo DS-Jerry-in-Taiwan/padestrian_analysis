@@ -1,0 +1,9 @@
+flowchart TD
+    A[輸入資料] --> B{ModelManager}
+    B -->|選擇 YOLO| C1[YOLO Model]
+    B -->|選擇 Faster R-CNN| C2[Faster R-CNN Model]
+    B -->|選擇 CLIP| C3[CLIP Model]
+    C1 --> D[統一推論接口]
+    C2 --> D[統一推論接口]
+    C3 --> D[統一推論接口]
+    D --> E[推論結果 統一格式]

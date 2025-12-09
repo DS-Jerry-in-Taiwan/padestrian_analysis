@@ -1,0 +1,6 @@
+flowchart TD
+    A[模型原始輸出] --> B{PostprocessManager}
+    B -->|分群| C1[依 attribute_type 分群]
+    C1 -->|排序/過濾| D1[依 score/confidence 排序、過濾]
+    D1 -->|top-k| E1[選擇 top-k]
+    E1 -->|格式化| F1[dict/JSON/DataFrame 輸出]
