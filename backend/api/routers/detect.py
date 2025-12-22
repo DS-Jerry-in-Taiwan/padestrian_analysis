@@ -1,18 +1,28 @@
 from fastapi import APIRouter, HTTPException
-from ..models import ImageRequest, Attribute
+from ..models import ImageRequest, Attribute, PipelineResponse, BatchImageRequest
 
 router = APIRouter(
     prefix="/api/detect",
     tags=["Detection"]
 )
 
-@router.post("")
+@router.post("", response_model=PipelineResponse)
 async def detect(request: ImageRequest):
     if not request.image_url or request.image_url.strip() == "":
         raise HTTPException(status_code=422, detail="image_url is required and cannot be empty")
-    return {
-        "results": [
-            {"attribute_type": "gender", "name": "male", "score": 0.95},
-            {"attribute_type": "clothes", "name": "coat", "score": 0.88}
-        ]
-    }
+    return PipelineResponse(results={
+        "gender": [Attribute(attribute_type="gender", name="male", score=0.95)],
+        "clothes": [Attribute(attribute_type="clothes", name="coat", score=0.88)]
+    })
+    
+@router.post("/batch", response_model=list[PipelineResponse])
+async def detect_batch(request: BatchImageRequest):
+    if not request.images or len(request.images) == 0:
+        raise HTTPException(status_code=422, detail="images is required and cannot be empty")
+    # 範例回傳，每張圖都給一組假資料
+    return [
+        PipelineResponse(results={
+            "gender": [Attribute(attribute_type="gender", name="male", score=0.95)],
+            "clothes": [Attribute(attribute_type="clothes", name="coat", score=0.88)]
+        }) for _ in request.images
+    ]
