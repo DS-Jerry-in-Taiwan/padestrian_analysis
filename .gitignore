@@ -19,3 +19,4 @@ __pycache__/
 env/
 venv/
 dev_doc/market_info/
+/home/ubuntu/projects/pedestrian_attribute_recognition_30%/backend/models/export/
