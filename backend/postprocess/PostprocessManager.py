@@ -51,7 +51,17 @@ class PostprocessManager:
         else:
             logging.error(f"Unsupported output format: {output_format}")
             raise ValueError(f"Unsupported output format: {output_format}")
-        
+
+    def postprocess_batch(self, model_outputs: list, **kwargs) -> list:
+        """
+        批次後處理：將多筆模型輸出轉為 list of 結果
+        Args:
+            model_outputs (list): 多筆模型輸出
+        Returns:
+            list: 多筆 postprocess 結果
+        """
+        return [self.__call__(output, **kwargs) for output in model_outputs]
+    
     def _to_dict(self, 
                  model_output: Any,
                  sort_by: str = None,

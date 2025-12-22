@@ -1,21 +1,43 @@
-#排出data
+# 排除資料資料夾
 data/
+
+# 排除模型檔案與匯出資料夾
+*.onnx
+*.pt
+*.pth
+*.ckpt
+export/
+backend/models/export/
+
+# 排除 shell 腳本
 *.sh
-tests/__pycache__/
-tests/unit_tests/__pycache__/
+
+# 排除 Python cache/暫存
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.sqlite3
-*.db
-*.log
-*.pot
-*.mo
-*.swp
-.DS_Store
+tests/__pycache__/
+tests/unit_tests/__pycache__/
+
+# 排除本地環境/設定
 .env
 .venv
 env/
 venv/
+
+# 排除測試/暫存/日誌/資料庫
+*.sqlite3
+*.db
+*.log
+
+# 排除國際化暫存
+*.pot
+*.mo
+
+# 排除 macOS/編輯器暫存
+*.swp
+.DS_Store
+
+# 排除不需上傳的 dev_doc 子目錄
 dev_doc/market_info/
